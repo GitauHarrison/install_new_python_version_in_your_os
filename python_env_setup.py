@@ -327,11 +327,9 @@ def install_pyenv_ubuntu_like(env: dict, *, is_wsl: bool) -> dict:
         """
         # pyenv configuration
         export PYENV_ROOT="$HOME/.pyenv"
-        command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+        export PATH="$PYENV_ROOT/bin:$PATH"
         eval "$(pyenv init -)"
-        if command -v pyenv-virtualenv-init >/dev/null 2>&1; then
-          eval "$(pyenv virtualenv-init -)"
-        fi
+        eval "$(pyenv virtualenv-init -)"
         """
     )
     append_to_shell_rc_if_missing(snippet)
