@@ -52,9 +52,10 @@ Throughout, the script is **prompt-driven**: it asks you to confirm important st
 You need:
 
 - **Git** (for cloning this repository and, on Ubuntu, for cloning `pyenv` and `pyenv-virtualenv`).
-- **Python 3** installed and accessible as `python3` on your PATH.
+- **Python 3.6 or newer** installed and accessible as `python3` on your PATH.
   - macOS usually has a system `python3`, or you may have installed one via Homebrew or Xcode tools.
-  - Ubuntu and Ubuntu/WSL typically include `python3` by default.
+  - Ubuntu and Ubuntu/WSL typically include a recent enough `python3` by default.
+  - On significantly older distributions where `python3` < 3.6 is the default, please upgrade Python first (the script uses modern language features such as f-strings).
 
 If `python3` is not available, install it first on your platform (e.g. `brew install python` on macOS, `sudo apt install python3` on Ubuntu, or `wsl --install` on Windows to get an Ubuntu environment that comes with Python 3).
 

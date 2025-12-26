@@ -25,6 +25,18 @@ import subprocess
 import sys
 from pathlib import Path
 from textwrap import dedent
+from typing import List, Optional
+
+
+# Enforce a minimum Python version at runtime for clarity.
+# Note: the script uses f-strings and other Python 3.6+ features, so it will
+# only run on Python 3.6 or newer.
+if sys.version_info < (3, 6):
+    sys.stderr.write(
+        "This script requires Python 3.6 or newer. "
+        "Detected Python {}.{}\n".format(sys.version_info[0], sys.version_info[1])
+    )
+    raise SystemExit(1)
 
 
 # ------------------------ helpers ------------------------
@@ -44,8 +56,8 @@ def run_cmd(
     capture_output: bool = False,
     text: bool = True,
     shell: bool = False,
-    env: dict | None = None,
-    cwd: str | None = None,
+    env: Optional[dict] = None,
+    cwd: Optional[str] = None,
 ):
     """Wrapper around subprocess.run with basic error handling."""
 
@@ -70,7 +82,7 @@ def run_cmd(
         )
 
 
-def ask_yes_no(prompt: str, default: bool | None = True) -> bool:
+def ask_yes_no(prompt: str, default: Optional[bool] = True) -> bool:
     if default is True:
         suffix = " [Y/n]: "
     elif default is False:
@@ -134,7 +146,7 @@ def detect_environment() -> str:
     return "other"
 
 
-def ensure_pyenv_in_env(env: dict | None = None) -> dict:
+def ensure_pyenv_in_env(env: Optional[dict] = None) -> dict:
     """Return an env dict with PYENV_ROOT and PATH set if ~/.pyenv exists.
 
     This is mostly for Linux / WSL manual installations.
@@ -152,7 +164,7 @@ def ensure_pyenv_in_env(env: dict | None = None) -> dict:
     return env
 
 
-def command_exists(name: str, env: dict | None = None) -> bool:
+def command_exists(name: str, env: Optional[dict] = None) -> bool:
     return shutil.which(name, path=(env or os.environ).get("PATH")) is not None
 
 
@@ -388,7 +400,7 @@ def ensure_pyenv_and_virtualenv(env_name: str, env: dict) -> dict:
 # ------------------------ version selection & installation ------------------------
 
 
-def list_available_versions(env: dict) -> list[str]:
+def list_available_versions(env: dict) -> List[str]:
     print("\nRetrieving available CPython versions from pyenv (this may take a few seconds)...")
     try:
         out = run_cmd(
@@ -409,7 +421,7 @@ def list_available_versions(env: dict) -> list[str]:
     return versions
 
 
-def prompt_for_version(env: dict) -> str | None:
+def prompt_for_version(env: dict) -> Optional[str]:
     versions = list_available_versions(env)
     if not versions:
         return None
