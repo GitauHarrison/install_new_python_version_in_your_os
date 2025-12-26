@@ -9,6 +9,27 @@ It is designed to be **interactive** and to work on:
 
 On plain (non-WSL) Windows, the script will show you how to enable WSL and install Ubuntu so that you can then run the script inside that environment.
 
+If you specifically want to **learn how to work with `pyenv` and `pyenv-virtualenv` on macOS step by step**, you can also refer to this companion guide:
+
+- [Using a newer Python version on macOS with pyenv & virtualenv](https://github.com/GitauHarrison/notes_on_general_topics/blob/main/01_new_python_version_macOS_virtualenv.md)
+
+---
+
+## Table of Contents
+
+- [What this script does](#what-this-script-does)
+- [Prerequisites](#prerequisites)
+- [Getting started](#getting-started)
+- [Platform-specific notes](#platform-specific-notes)
+  - [macOS](#macos)
+  - [Ubuntu and Ubuntu under WSL](#ubuntu-and-ubuntu-under-wsl)
+  - [Plain Windows (non-WSL)](#plain-windows-non-wsl)
+- [Understanding how `python` behaves with pyenv](#understanding-how-python-behaves-with-pyenv)
+- [The interactive flow](#the-interactive-flow)
+- [Notes and limitations](#notes-and-limitations)
+- [Uninstalling or cleaning up the demo](#uninstalling-or-cleaning-up-the-demo)
+- [Troubleshooting](#troubleshooting)
+
 ---
 
 ## What this script does
@@ -177,6 +198,103 @@ If you run `python_env_setup.py` directly on **Windows** (outside of WSL), the s
    ```
 
 From this point on, the script behaves as if you were on a regular Ubuntu system.
+
+---
+
+## Understanding how `python` behaves with pyenv
+
+A very common point of confusion is that **`python -V` can show different versions depending on where you are and how pyenv is configured**. This is expected.
+
+### 1. Local (per-project) version via `.python-version`
+
+When the script creates the demo project, it does this inside `~/pyenv_virtualenv_demo`:
+
+- Creates a virtual environment, e.g. `demo-env`.
+- Runs:
+  ```bash
+  pyenv local demo-env
+  ```
+- This writes a `.python-version` file containing `demo-env` into that directory.
+
+What this means in practice:
+
+- **Inside** `~/pyenv_virtualenv_demo`:
+  - `python -V` and `python3 -V` will use the Python from `demo-env` (e.g. `3.14.2`).
+  - `which python` will point to something like `~/.pyenv/versions/demo-env/bin/python`.
+  - `pyenv version` will show:
+    ```text
+    demo-env (set by /home/you/pyenv_virtualenv_demo/.python-version)
+    ```
+- **Outside** that directory (e.g. `cd ~` or `cd /tmp`):
+  - The `.python-version` file is no longer in effect.
+  - `python -V` and `python3 -V` fall back to either your **global pyenv version** or your **system Python**.
+
+So it is **normal** and **not a problem** if:
+
+- `python -V` inside the demo folder shows your new pyenv-managed version.
+- `python -V` outside the demo folder shows your system Python (for example `3.8.10`).
+
+### 2. Global pyenv version vs system Python
+
+pyenv distinguishes between:
+
+- The **system** Python (whatever your OS ships, e.g. `/usr/bin/python` or `/usr/bin/python3`).
+- The **global pyenv version**, which you can set with `pyenv global`.
+
+To see what pyenv thinks is active in the current directory:
+
+```bash
+pyenv version
+```
+
+Typical outputs:
+
+- `demo-env (set by /home/you/pyenv_virtualenv_demo/.python-version)` → project-local env is active.
+- `3.14.2 (set by /home/you/.pyenv/version)` → a pyenv-managed global version is active.
+- `system (set by /home/you/.pyenv/version)` → pyenv is active but defers to the OS Python.
+
+### 3. Making your new Python the global default (optional)
+
+If, after using the script, you want **all shells, in all directories** to default to your new version (for example `3.14.2`) instead of the system Python, run:
+
+```bash
+pyenv global 3.14.2
+exec "$SHELL" -l   # restart your shell to pick up the change
+```
+
+Now, outside any directory with a `.python-version` file:
+
+- `python -V` → `Python 3.14.2`
+- `python3 -V` → `Python 3.14.2`
+- `which python` → will resolve to pyenv's shim, which then maps to `~/.pyenv/versions/3.14.2/bin/python`.
+
+Inside a project with its own `.python-version` (like the demo directory), the **local** setting still wins over the global setting.
+
+If you ever want to go back to using the OS Python as the default, you can run:
+
+```bash
+pyenv global system
+exec "$SHELL" -l
+```
+
+After that, outside any pyenv-managed project directory:
+
+- `python -V` / `python3 -V` will again show your system version (e.g. `3.8.10`).
+
+### 4. Quick checklist when versions look “wrong”
+
+If `python -V` does not show what you expect, check in this order:
+
+1. **Are you in a directory with a `.python-version` file?**
+   - Run `pwd` and `ls -a` to see if `.python-version` is present.
+   - If yes, run `pyenv version` to see which environment it is selecting.
+2. **What is your global pyenv setting?**
+   - Run `pyenv global`.
+3. **Is pyenv active at all?**
+   - Run `type pyenv` — it should say `pyenv is a function` or similar.
+   - Run `which python` — it should go through pyenv's shims (usually under `~/.pyenv/shims`).
+
+Understanding these three layers (local `.python-version`, global pyenv version, and system Python) explains almost all “why is `python -V` showing X instead of Y?” questions.
 
 ---
 
